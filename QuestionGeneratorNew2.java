@@ -14,12 +14,7 @@ public class QuestionGeneratorNew2 {
 	
 	private static String getStudyFiles() {
 		String studyFiles = "";
-		//studyFiles += getDairyFiles();
-		//studyFiles += getAngularFiles();
-		//studyFiles += getTestFiles();
-		//studyFiles += getJavaStreams();
-		//studyFiles += getGit();
-		//studyFiles += getSelenium();
+		
 		studyFiles += getInterviewBriefStudy();
 		return studyFiles;
 	}
@@ -27,49 +22,7 @@ public class QuestionGeneratorNew2 {
 	private static String getInterviewBriefStudy() {
 		String myFiles="C:\\Users\\srini\\Desktop\\VASU\\personal\\job\\workspace\\MyStudy\\study\\InterviewBriefStudy.txt";
 		return myFiles;
-	}
-	
-	private static String getTestFiles() {
-		String myFiles="C:\\Users\\srini\\Desktop\\VASU\\personal\\job\\workspace\\MyStudy\\study\\Test.txt";
-		return myFiles;
-	}
-	
-	private static String getSelenium() {
-		String myFiles="C:\\Users\\srini\\Desktop\\VASU\\personal\\job\\workspace\\MyStudy\\study\\Selenium\\SeleniumNotes\\Selenium.txt";
-		return myFiles;
-	}
-
-	private static String getGit() {
-		String myFiles="C:\\Users\\srini\\Desktop\\VASU\\personal\\job\\workspace\\MyStudy\\study\\tools\\git.txt";
-		return myFiles;
-	}
-
-	private static String getJavaStreams() {
-
-		//String myFiles="C:\\Users\\srini\\Desktop\\VASU\\personal\\job\\workspace\\MyStudy\\study\\coreJava\\Java Certification\\Durgajava8QAs.txt";
-		String myFiles="C:\\Users\\srini\\Desktop\\VASU\\personal\\job\\workspace\\MyStudy\\study\\coreJava\\Java Certification\\amigos\\java-stream-qa.txt";
-		return myFiles;
-	}
-
-	private static String getDairyFiles() {
-		
-		return Stream.of(new File("C:\\Users\\srini\\Desktop\\VASU\\personal\\job\\workspace\\MyStudy\\study\\Dairy\\2023\\Oct").listFiles())
-			      .filter(file -> !file.isDirectory())
-			      .map(File::getAbsolutePath)
-			      .collect(Collectors.joining(","));
-		
-		}
-	
-	private static String getAngularFiles() {
-		
-		String myFiles="";
-		
-		for(int i=1; i<=30; i++) {
-			myFiles += "C:\\Users\\srini\\Desktop\\VASU\\personal\\job\\workspace\\MyStudy\\study\\FrontEnd\\Angular\\rsk\\Angular_Tomato\\TDay" +i+ ".txt,";
-		}
-		
-		return myFiles;
-	}
+	}	
 
 	private static Map<String, String> read(String myFiles) throws IOException {
 		String[] splitFiles = myFiles.split(",");
