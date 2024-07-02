@@ -1,0 +1,1017 @@
+Q)comparision of Predicate, Function, Consumer, Supplier - purpose prototype abstract default static
+A)
+a- predicate
+b - function
+c - consumer
+d - supplier
+
+1)Purpose
+a)To take some input and perform some conditional check and return boolean
+b)to take some input and perform some operation and return some output
+c)to take some input and perform some operation but don't return anything
+d)it won't take any input, but perform some operation and return some output
+
+2)Prototype
+a)interface Predicate<T>
+b)interface Function<T,R>
+c)interface Consumer<T>
+d)interface Supplier<R>
+
+3)abstract method
+a)public boolean test(T t)
+b)public R apply(T t)
+c)public void accept(T t)
+d)public R get();
+
+4)default methods
+a)and, or, negate
+b)andThen, compose
+c)andThen
+d)nothing
+
+5)static methods
+a)isEqual
+b)identity
+c)nothing
+d)nothing
+
+Q)Comparision of one-Arg and two-Arg Functional interfaces
+A)
+Predicate vs BiPredicate
+
+interface Predicate<T>{
+	public boolean test(T t);
+	default Predicate and(Predicate p);
+	default Predicate or(Predicate p);
+	default Predicate negate();
+	static Predicate isEqual(Object o);
+}
+
+interface BiPredicate<T,U>{
+	public boolean test(T t, U u);
+	default BiPredicate and(BiPredicate p);
+	default BiPredicate or(BiPredicate p);
+	default BiPredicate negate();
+	//no static method
+}
+
+Function vs BiFunction
+
+interface Function<T, R>{
+	public R apply(T t);
+	default Function andThen(Function f)
+	default Function compose(Function f)
+	static Function identity()
+}
+
+interface BiFunction<T, U, R>{//only 2 methods
+	public R apply(T t, U u);
+	default BiFunction andThen(Function f);//andThen arg is Function but not BiFunction
+}
+
+Consumer vs BiConsumer
+interface Consumer<T>{
+	public void accept(T t);
+	default Consumer andThen(Consumer c);
+}
+
+interface BiConsumer<T,U>{
+	pub lic void accept(T t, U u);
+	default BiConsumer andThen(BiConsumer c);//andThen arg is BiConsumer but not Consumer
+}
+
+Q)List static methods for Two Arg interfaces
+A)None of them have static methods
+
+Q)List default methods for Two Arg interfaces
+A)BiPredicate : and, or, negate ---> All of these take BiPredicate as arg
+BiFunction : andThen --> takes Function as arg but not BiFunction
+BiConsumer : andThen --> taken BiConsumer as arg but not Consumer
+
+Q)list of intermediate and terminal operations
+A)
+source : https://www.logicbig.com/how-to/code-snippets/jcode-java-8-streams-stream-sequential.html
+------------
+Intermediate:	(20)
+------------
+boxed()	 
+filter()
+map()
+flatMap()
+distinct()
+sorted()
+peek()
+limit()
+skip()
+OnClose()
+dropWhile
+takeWhile
+parallel
+isParallel
+stream
+parallelStream
+iterate
+splitIterator
+unordered
+sequential
+
+---------
+Terminal: (17)
+----------
+anyMatch
+allMatch
+noneMatch
+
+findAny
+findFirst
+
+collect
+
+forEach()
+min()
+max()
+sum
+average
+summaryStatistics
+count
+reduce()
+toArray()
+iterator
+close
+
+
+Q)explain onClose intermediate operation
+A)
+https://www.logicbig.com/how-to/code-snippets/jcode-java-8-streams-stream-sequential.html
+
+This intermediate operation returns an equivalent stream with an additional close listener registered with the stream. Close handlers are run when the BaseStream#close() method is called on the stream, and are executed in the order they were added.
+
+eg:
+import java.util.Arrays;
+import java.util.stream.Stream;
+
+public class OnCloseExample {
+
+    public static void main(String... args) {
+        String[] s = {"one", "two", "three", "four"};
+
+        Stream<String> stream = Arrays.stream(s).onClose(() -> {
+            System.out.println("-- closing stream --");
+        });
+
+        stream.forEach(System.out::println);
+        System.out.println("-- going to close --");
+        stream.close();
+    }
+}
+
+output:
+one
+two
+three
+four
+-- going to close --
+-- closing stream --
+
+Q)Explain unordered intermediate operation
+A)source : https://www.logicbig.com/how-to/code-snippets/jcode-java-8-streams-stream-unordered.html
+This intermediate operation returns an equivalent stream that is unordered
+
+eg:
+This example shows that unordered stream does not respect the stability. Stream#distinct() method returns the same identical results in both cases but with unordered stream, the corresponding instance might be picked randomly. Using unordered stream improves the performance though.
+
+package com.logicbig.example.stream;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Stream;
+
+public class UnorderedExample2 {
+
+    public static void main(String... args) {
+
+        List<Integer> list = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            list.add(new Integer(1));
+            list.add(new Integer(2));
+        }
+
+        //The original list has 10 different object instances but half of them are identical by values
+        System.out.println("Original collection with identityHashCodes: ");
+        list.forEach(i -> System.out.println(i.toString() + " - " + System.identityHashCode(i)));
+
+        System.out.println("-- distinct ordered --");
+        for (int i = 0; i < 5; i++) {//repeat 5 times to check stability
+            Stream<Integer> stream = list.stream();
+            Object[] objects = stream.parallel().distinct().toArray();
+            for (Object object : objects) {
+                System.out.print(object.toString() + " - " + System.identityHashCode(object) + " | ");
+            }
+            System.out.println();
+        }
+
+        System.out.println("-- distinct unordered --");
+        for (int i = 0; i < 5; i++) {//repeat 5 times to check stability
+            Stream<Integer> stream = list.stream();
+            Object[] objects = stream.unordered().parallel().distinct().toArray();
+            for (Object object : objects) {
+                System.out.print(object.toString() + " - " + System.identityHashCode(object) + " | ");
+            }
+            System.out.println();
+        }
+    }
+}
+
+output:
+Original collection with identityHashCodes: 
+1 - 671869652
+2 - 1199998894
+1 - 434710057
+2 - 1066276340
+1 - 1210324379
+2 - 1005342918
+1 - 1801773564
+2 - 613054673
+1 - 1282025750
+2 - 358169149
+-- distinct ordered --
+1 - 671869652 | 2 - 1199998894 | 
+1 - 671869652 | 2 - 1199998894 | 
+1 - 671869652 | 2 - 1199998894 | 
+1 - 671869652 | 2 - 1199998894 | 
+1 - 671869652 | 2 - 1199998894 | 
+-- distinct unordered --
+1 - ' | 2 - 613054673 | 
+1 - 1801773564 | 2 - 1005342918 | 
+1 - 1801773564 | 2 - 1005342918 | 
+1 - 1801773564 | 2 - 1005342918 | 
+1 - 1801773564 | 2 - 1005342918 | 
+
+Q)Provide samples of Concrete data after performing streams
+A)List, Object, Optional, String, Int
+
+Q)what is of method
+A)of method is used to convert a group of values into List
+
+eg:
+List<String> names = List.of("one", "two");
+Here we got list of Strings
+
+Set<String> names = Set.of("one", "two");
+Here we got set of Strings. if we add any duplicate string, we will get exception
+
+Stream<String> names = Stream.of("one", "two");
+Here we got Stream of Strings
+
+Q)Can we convert an array into Stream
+A)yes
+String[] namesArray = {"one", "two"};
+Arrays.stream(namesArray);
+
+Q)what is limit()
+A)limit is an intermediate operation which allows the stream to pass these much no.of elements
+eg:
+people.stream().filter(p -> p.getAge() < 18).limit(10).collect(Collectors.toList());
+
+Q)what is forEach()
+A)forEach is a terminal operation as it returns void
+
+eg:
+people.stream()
+        .filter(p -> p.getAge() <= 18)
+        .limit(1)
+		.forEach(System.out::println);
+
+Q)How to debug streams
+A)we can debug in intellij.
+But in eclipse, we can write sysouts or use peek intermediate operation
+(or)
+we can put debug point, then we can see the data.
+
+Q)what is range()
+A)range() is applicable for IntStream which allows us to write a for loop
+
+eg:-
+IntStream.range(1,10).forEach(System.out::println)
+Then it prints 1 to 9
+
+if we want 1 to 10, then we have to use rangeClosed()
+
+Q)wap to print first 10 people using enhanced for loop i.e., IntStream
+A)IntStream.range(0,10)
+			.forEach(index -> {
+				System.out.println(people.get(index));
+			});
+			
+Q)what is iterate()
+A)just like ordinary for loop
+It has two parameters. 
+First is seed. This is just like initializtion step in for loop
+Second is increment/decrement operator
+
+eg:
+IntStream.iterate(0, v -> v+1).limit(10).forEach(System.out::println);			
+we are using limit for condition.
+Otherwise it will be an infinite loop
+
+Q)Difference between filter and takeWhile
+A)filter is like continue and takeWhile is like break
+
+eg:
+System.out.println("using filter");
+Stream.of(2,4,6,7,8).filter(i -> i%2 == 0).forEach(System.out::print);
+System.out.println("using takeWhile");
+Stream.of(2,4,6,7,8).takeWhile(i -> i%2 == 0).forEach(System.out::print);
+
+output:
+2468
+246
+
+Q)Difference between takeWhile and dropWhile
+A)Both work as break statement.
+takeWhile will take until the condition is satisfied. It will stop as soon as the condition is not satisfied. Then prints all the taken elements
+dropWhile will drop until the condition is satisfied. It will stop as soon as the condition is not satisfied. Then prints the remaining all elements
+
+eg:
+Stream.of(2,4,6,7,8).dropWhile(i -> i%2 == 0).forEach(System.out::print);
+78
+
+Q)Difference between findFirst and findAny
+A)findFirst will get the first occurence from stream but findAny will get any of the occurances from stream
+Both returns optional i.e., we may or may not get output.
+Then we can use orElse method if null.
+
+eg:
+System.out.println(Stream.of(2,4,6,7,8).filter(n -> n%2 == 0).findFirst().orElse(-1));
+
+Q)Difference between allMatch and anyMatch
+A)These methods return boolean.
+allMatch:
+if all the elements of stream are satisfied with given predicate, then true. otherwise false
+
+eg:
+System.out.println(Stream.of(2,4,6,8).allMatch(n -> n%2 == 0));
+
+anyMatch:
+if any of the elements of stream are satisfied with given predicate, then true. otherwise false
+
+eg:
+System.out.println(Stream.of(2,4,5,6,8).anyMatch(n -> n%2 != 0));
+
+Q)Can we transfer one datatype to another datatype with map method
+A)Yes
+with the given stream element, we can do whatever we want
+
+eg:
+List<PersonDTO> dtos = person
+						.stream()
+						.map(p -> {
+							PersonDTO dto = new PersonDTO(p.getPersonId(), p.getPersonAge());
+							return dto;
+								  })
+						.collect(Collectors.toList());
+						
+Q)explain mapToDouble()
+A)consider we are receiving car and it has an attribute price
+we would like to find the average price of cars available
+
+cars
+	.stream()
+	.mapToDouble(Car::getPrice) //using method reference
+	.average() //returns OptionalDouble
+	.orElse(0)						
+	
+or
+
+cars
+	.stream()
+	.mapToDouble(c -> c.getPrice()) 
+	.average() //returns OptionalDouble
+	.orElse(0)		
+
+mapToDouble :- this will take car element from stream. Then converts into Double
+
+Q)Explain reduce operation
+A)
+reduce operation takes the stream of elements and convert to single element by performing some computation.
+The following program provides the sum of all elements
+
+eg:
+int[] integers = {1,3,2,4,6,5};
+int reduceOperation = Arrays.stream(integers).reduce(0, (a, b) -> a+b);
+System.out.println(reduceOperation);
+Note:- Here first argument 0 is a's value. Then each element of the array is passed as b. Then compute the output. Then output is stored in a ...etc
+
+Q)Can we replace lambda with method reference
+A) yes
+
+Q)what is flatMap
+A)It combines various lists into single list.
+
+private static final List<List<String>> arrayListOfNames = List.of(
+            List.of("Mariam", "Alex", "Ismail"),
+            List.of("John", "Alesha", "Andre"),
+            List.of("Susy", "Ali")
+    );
+	
+withoutFlatMap :-
+    public void withoutFlatMap() throws Exception {
+        // [Mariam, Alex, Ismail, John, Alesha, Andre, Susy, Ali]
+        List<String> names = new ArrayList<>();
+        for (List<String> strings : arrayListOfNames) {
+            names.addAll(strings);
+        }
+        System.out.println(names);
+    }
+
+withFlatMap :-    
+    public void withFlatMap() throws Exception {
+        // [Mariam, Alex, Ismail, John, Alesha, Andre, Susy, Ali]
+        List<String> names = arrayListOfNames.stream()
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
+        System.out.println(names);
+    }	
+	
+Q)How can you understand a method reference in big code
+A)select that code 
+class::methodName
+right click --> refactor --> extract to local variable
+Then you can understand clearly
+
+Q)what is BigDecimal
+A)if the number is big, then it will be displayed with 'E' in it.
+To format and display in readable format, we use BigDecimal
+
+Q)Explain grouping
+A)groups the output data.
+We are using forEach which takes BiConsumer
+
+public void simpleGrouping() throws Exception {
+        Map<String, List<Car>> map = MockData.getCars()
+                .stream()
+                .collect(Collectors.groupingBy(Car::getMake));
+        map.forEach((s, cars) -> {
+            System.out.println("Make " + s);
+            cars.forEach(System.out::println);
+            System.out.println("---------------------");
+        });
+
+    }
+
+Q)wap to find count of occurances of each String
+List.of("John","John","Mariam","Alex","Mohammado","Mohammado","Vincent","Alex","Alex");
+A)
+
+public void groupingAndCounting() throws Exception {
+        List<String> names = List.of("John","John","Mariam","Alex","Mohammado","Mohammado","Vincent","Alex","Alex");
+
+        Map<String, Long> map = names.stream()
+                .collect(Collectors.groupingBy(
+                        Function.identity(),
+                        Collectors.counting())
+                );
+				
+		(or)
+
+		Map<String, Long> map1 = names.stream()
+                .collect(Collectors.groupingBy(
+                        s -> s,
+                        Collectors.counting())
+                );	
+
+        System.out.println(map);
+
+    }	
+	
+Q)important urls
+A)
+https://www.javaguides.net/2021/11/java-stream-intermediate-operations.html
+
+Q)Generate a list of Integers without using add()
+A)List<Integer> numbers = List.of(1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 9, 9, 9);
+
+Q)what are stream intermediate operations
+A)If the operation produces another stream, then it is called intermediate operation
+
+Q)Name some intermediate operations
+A)
+filter()
+map()
+flatMap()
+distinct()
+sorted()
+peek()
+limit()
+skip()
+
+Q)Explain peek()
+A)peek is mainly used for debugging.
+eg:
+Stream.of("one", "two", "three", "four")
+  .filter(e -> e.length() > 3)
+  .peek(e -> System.out.println("Filtered value: " + e))
+  .map(String::toUpperCase)
+  .peek(e -> System.out.println("Mapped value: " + e))
+  .collect(Collectors.toList());
+  
+Q)why can't we use forEach instead of peek for debugging
+A)forEach is a terminal operation, so we cannot have next operation
+But peek is an intermediate operation, so we can use it any no.of times.
+So, we can see how the objects are flowing in the pipeline.
+
+Q)explain skip method
+A)The skip(n) method is an intermediate operation that discards the first n elements of a stream. The n parameter can't be negative, and if it's higher than the size of the stream, skip() returns an empty stream.
+
+eg:
+Stream.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+    .filter(i -> i % 2 == 0)
+    .skip(2)
+    .forEach(i -> System.out.print(i + " "));
+In this stream, we're picking up the even numbers of the stream but we skip the first two. Therefore, our result is: 6 8 10
+
+Q)what are lazy methods in streams
+A)intermediate operations are lazy methods as they don't get triggered without terminal operations.
+eg:
+Stream<String> nameStream = Stream.of("Alice", "Bob", "Chuck");
+nameStream.peek(System.out::println);
+
+We cannot see any output. Because, Here peek is an intermediate operation. And it doesn't have any terminal operation.
+
+Q)what are stream terminal operations
+A)If the operation produces non stream, then it is called terminal operation
+
+Q)Name some terminal operations
+A)
+anyMatch()
+allMatch()
+noneMatch()
+collect()
+count()
+findAny()
+findFirst()
+forEach()
+min()
+max()
+reduce()
+toArray()
+
+Q)wap to sort a collection of persons
+A)people.stream().map(Person::getFirstName).sorted().collect(Collectors.toList());
+
+Q)wap to sort a collection of persons in reverse order
+A)people.stream().map(Person::getFirstName).sorted(Comparator.reverseOrder()).collect(Collectors.toList());
+
+Q)wap to sort objects without using comparator
+A)people.stream().sorted(Comparator.comparing(Person::getFirstName()).collect(Collectors.toList());
+
+Q)wap to sort objects without using comparator in reverse order
+A)people.stream().sorted(Comparator.comparing(Person::getFirstName()).reversed().collect(Collectors.toList());
+
+Q)wap to join a list of strings by converting first character of each string to uppercase 
+eg:
+List<String> names = List.of("anna", "john", "marcos", "helena", "yasmin");
+   expected output:-"Anna, John, Marcos, Helena, Yasmin"
+A)
+public void joiningStrings() throws Exception {
+        List<String> names = List.of("anna", "john", "marcos", "helena", "yasmin");
+        // "Anna, John, Marcos, Helena, Yasmin"
+        StringBuilder join = new StringBuilder();
+
+        for (String name : names) {
+            join.append(name.substring(0, 1).toUpperCase())
+                    .append(name.substring(1))
+                    .append(", ");
+        }
+
+		System.out.println(join);
+        System.out.println(join.substring(0, join.length() - 2));
+    }
+same program using streams
+
+   String join = names.stream()
+                .map(name -> name.substring(0, 1).toUpperCase() + name.substring(1))
+                .collect(Collectors.joining(","));
+        System.out.println(join);
+
+    }
+
+Q)what is partitionBy
+A)
+partitioningBy will take a predicate.
+predicate returns a boolean value which is either true or false
+So, partitioningBy will apply the predicate on our stream and returns the data with true and false as per predicate.
+It will return the data in the form of map.
+This map has two entries i.e., true data and false data.
+
+The following example will perform partition on our student stream with grade > 10 or not.
+
+example:
+
+Map<Boolean, List<Student>> partitionBy = studList.stream().collect(Collectors.partitioningBy(s -> s.getGrade() > 10));  
+
+Q)what is the difference between partitioningBy and groupingBy
+A)we use groupingBy when we have lot of scenarios and partitioningBy when we have two scenarios at max.
+
+Map<Boolean, List<Student>> partitioningBy = studList.stream().collect(Collectors.partitioningBy(s -> s.getGrade() > 10));
+		Map<Object, List<Student>> groupingBy = studList.stream().collect(Collectors.groupingBy(s -> s.getCar())); 
+		
+Q)what is averagingBy
+A)if we want to perform average of list of elements
+
+eg:
+List<Long> numbers = Arrays.asList(10L, 15L, 1L, 3L, 7L);
+Double average = numbers.stream().collect(Collectors.averagingDouble(Long::longValue));
+
+We have various operations like averagingInt, averagingLong, averagingDouble ... etc		
+
+Q)what is parallel stream
+A)
+way 1
+List.stream().parallel()
+
+way 2 : using parallelStream in place of stream
+List.parallelStream()
+
+Q)when shouldn't we use parallelStream
+A)if there is any mutable fields in business logic
+eg:- performing sum of given numbers
+
+Q)explain groupingBy multiple fields
+A)
+Map<String, Map<String, List<Employee>>> collect = employeesList.stream()
+				.collect(
+						Collectors.groupingBy(Employee::getDesignation, 
+								Collectors.groupingBy(Employee::getGender)));
+								
+Q) explain intermediate operation iterate
+A)IntStream.iterate(1, v -> v+1).limit(10).forEach(System.out::println);
+
+Q) explain iterator and splitIterator i.e., spliterator
+A) Both are used to iterate through the collection.
+spliterator is used to iterate when we are processing in multiple threads.
+
+	List<String> names = new ArrayList<>();
+		names.add("Rams");
+		names.add("Posa");
+		names.add("Chinni");
+			
+		// Getting Spliterator
+		Spliterator<String> namesSpliterator = names.spliterator();
+			
+		// Traversing elements
+		namesSpliterator.forEachRemaining(System.out::println);	
+		
+		Iterator<String> namesIterator = names.iterator();
+		namesIterator.forEachRemaining(System.out::println);
+		
+Q)explain consumer with an example with lambda representation
+A)consumer is a functional interface. It will take an object and do however we provide the implementation in lambda expression.
+
+Consumer<Movie> movieConsumer = m -> System.out.println(m);
+Here Consumer will take movie as input parameter.
+implementation is printing the movie
+
+eg:-
+public class MyTest8 {
+
+	public static void main(String[] args) {
+
+		MyTest8 t = new MyTest8();
+		t.process();
+	}
+
+	private void process() {
+		Consumer<Movie> movieConsumer = m -> System.out.println(m);
+				
+		Movie x = new Movie();
+		x.setName("XMovie");
+		x.setYear(2024);
+		movieConsumer.accept(x);
+	}
+}
+
+Movie.java
+public class Movie {
+
+	String name;
+	int year;
+	
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+	public int getYear() {
+		return year;
+	}
+	public void setYear(int year) {
+		this.year = year;
+	}
+	
+	@Override
+	public String toString() {
+		return "Movie [name=" + name + ", year=" + year + "]";
+	}
+	
+}
+output:
+Movie [name=XMovie, year=2024]
+
+Q)explain consumer with an example (System.out::println) method reference(existing java api)
+A)
+Consumer<Movie> movieConsumer = System.out::println;
+
+Here we are telling Consumer will take "Movie" as parameter
+implementation is present in the class System.out and method println
+Here we don't need to mention lambda. we are replacing lambda with method reference.
+eg:
+public class MyTest8 {
+
+	public static void main(String[] args) {
+
+		MyTest8 t = new MyTest8();
+		t.process();
+	}
+
+	private void process() {
+		Consumer<Movie> movieConsumer = System.out::println;
+		
+		Movie x = new Movie();
+		x.setName("XMovie");
+		x.setYear(2024);
+		movieConsumer.accept(x);
+	}
+}
+Movie.java
+public class Movie {
+
+	String name;
+	int year;
+	
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+	public int getYear() {
+		return year;
+	}
+	public void setYear(int year) {
+		this.year = year;
+	}
+	
+	@Override
+	public String toString() {
+		return "Movie [name=" + name + ", year=" + year + "]";
+	}
+	
+}
+output:
+Movie [name=XMovie, year=2024]
+
+Q)explain consumer with an example (System.out::println) method reference(custom implementation)
+A)Consumer<Movie> movieConsumer = new MyTest8()::sandhya;
+Here Consumer will take Movie instance as input parameter
+And the implementation is present in MyTest8 class and sandhya method
+Also we used "new" operator, because "sandhya" method is non-static method.
+note:- if method "sandhya" is static method, then we have to write
+Consumer<Movie> movieConsumer = MyTest8()::sandhya;
+public class MyTest8 {
+
+	public static void main(String[] args) {
+
+		MyTest8 t = new MyTest8();
+		t.process();
+	}
+
+	private void process() {
+		Consumer<Movie> movieConsumer = new MyTest8()::sandhya;
+		
+		Movie x = new Movie();
+		x.setName("XMovie");
+		x.setYear(2024);
+		movieConsumer.accept(x);
+	}
+
+	private void sandhya(Movie m) {
+		System.out.println("sandhya implementation");
+	}
+}
+
+Movie.java
+public class Movie {
+
+	String name;
+	int year;
+	
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+	public int getYear() {
+		return year;
+	}
+	public void setYear(int year) {
+		this.year = year;
+	}
+	
+	@Override
+	public String toString() {
+		return "Movie [name=" + name + ", year=" + year + "]";
+	}
+	
+}
+output:
+Movie [name=XMovie, year=2024]
+
+Q)Can the Consumer custom implementation return anything 
+A)yes
+Java will check whether we are sending the mentioned instance as parameter or not. It won't care about whether the custom implementation method is returning something or not.
+Because Consumer won't receive anything from our custom implementation
+
+eg:
+public class MyTest8 {
+
+	public static void main(String[] args) {
+
+		MyTest8 t = new MyTest8();
+		t.process();
+	}
+
+	private void process() {
+		Consumer<Movie> movieConsumer = new MyTest8()::sandhya;
+		
+		Movie x = new Movie();
+		x.setName("XMovie");
+		x.setYear(2024);
+		movieConsumer.accept(x);
+	}
+
+	private Movie sandhya(Movie m) {
+		System.out.println("sandhya implementation");
+		return m;
+	}
+}
+
+Q)Do we need to convert the given List into stream just to apply a terminal operation
+A)No
+eg:
+List.of(1,2,3).forEach(n -> System.out.println(n+1));
+Here forEach is a terminal operation. We are not converting the list into stream. 
+if we want, we can convert to stream and then apply terminal operation
+List.of(1,2,3).stream().forEach(n -> System.out.println(n+1));
+
+Q)Do we need to convert the given List into stream just to apply a intermediate operation
+A)we cannot apply intermediate operation unless we convert the given List into stream.
+
+Q)Usually we will write a Functional interface implementation in a class and using it in the same class. Can we reuse it across the project
+A)yes. 
+1) Method Reference (ok)
+2) Extending Functional interface
+
+eg:
+public class EmailValidator implements Function<String, Boolean>{
+
+	@Override
+	public Boolean apply(String email) {
+		return email.contains("@");
+	}
+}
+
+public class MyTest8 {
+
+	public static void main(String[] args) {
+
+		MyTest8 t = new MyTest8();
+		t.process();
+	}
+
+	private void process() {
+		EmailValidator ev = new EmailValidator();
+		System.out.println(ev.apply("srini@gmail.com"));
+	}
+}
+
+output:
+true
+
+note:- We can reuse the lambda expression across the project
+
+Q)How to format output in sysout
+A)System.out.println("My name is %s and i live in %s".formatted(var1, var2));
+when this statement is getting executed, it will replace %s with var1 and var2 accordingly
+note:- var can be of any type.
+
+Q)what is enum
+A)enum is nothing but a kind of class which can hold particular set of names
+eg:
+enum ValidationResult {
+		SUCCESS,
+		EMAIL_NOT_VALID_ERROR,
+		EMAIL_TAKEN_ERROR,
+		PHONE_NOT_VALID_ERROR,
+		NOT_ADULT_ERROR
+	}
+
+Q)How can we access enum name 
+A)if we want to access any variable, we will use
+instanceName.variableName
+
+if the variable is static, we don't need to create instance. We can access by using className
+className.variableName
+
+if we want to access the variable without using className, we have to import using static keyword i.e., 
+import static com.java8.ValidationResult.*;	
+Then we can use variableName itself.
+
+Q)Explain validator using Function
+A) Here we are writing our own Function PersonRegistrationValidator 
+So, it can have any no.of static methods, default methods and one abstract method
+we have written three static methods
+we have also written a default method
+we are using the existing abstract method.
+
+public class Person {
+
+	String name;
+	String email;
+	String phoneNumber;
+}
+
+package com.java8;
+
+import java.util.function.Function;
+
+import com.java8.PersonRegistrationValidator.ValidationResult;
+import static com.java8.PersonRegistrationValidator.ValidationResult.*;
+
+public interface PersonRegistrationValidator extends Function<Person, ValidationResult>{
+	
+	enum ValidationResult {
+		SUCCESS,
+		EMAIL_NOT_VALID_ERROR,
+		EMAIL_TAKEN_ERROR,
+		PHONE_NOT_VALID_ERROR,
+		NOT_ADULT_ERROR
+	}
+
+	static PersonRegistrationValidator isEmailValid() {
+		return person -> person.email.contains("@") 
+						 ? SUCCESS 
+						 : EMAIL_NOT_VALID_ERROR;
+	}
+	
+	static PersonRegistrationValidator isPhoneNumberValid() {
+		return person -> person.phoneNumber.contains("+") 
+						 ? SUCCESS 
+						 : PHONE_NOT_VALID_ERROR;
+	}
+	
+	static PersonRegistrationValidator isEmailTaken() {
+		return person -> SUCCESS;
+	}
+	
+	default PersonRegistrationValidator and(PersonRegistrationValidator other) {
+		return person -> {
+							ValidationResult result	= this.apply(person);
+							return result.equals(SUCCESS) ? other.apply(person) : result;
+		};			
+	}
+}
+
+package com.java8;
+
+public class MyTest8 {
+
+	public static void main(String[] args) {
+
+		MyTest8 t = new MyTest8();
+		t.process();
+	}
+
+	private void process() {
+		
+		Person jamila  = new Person("jamila", "jamila@gmail.com", "+1234567890");
+		Person alex  = new Person("alex", "alex@gmail.com", "1234567890");
+		
+		PersonRegistrationValidator validator = PersonRegistrationValidator
+			.isEmailValid()
+			.and(PersonRegistrationValidator.isEmailTaken())
+			.and(PersonRegistrationValidator.isPhoneNumberValid());
+		
+		System.out.println(validator.apply(jamila));
+	}
+}
+
+output: SUCCESS
+
+Q)what are higher order functions
+A)It is part of functional programming
+The function takes one or more functions as parameters
+The function return can return another function as result
+
