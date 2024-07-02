@@ -1,0 +1,1467 @@
+Q)what is over()
+A)window function which covers entire table
+
+Q)what is over(partition by columns)
+A)partition by is nothing but group by
+
+Q)what is rank()
+A) performs generally for the rest of the columns.
+Then it assigns rank to the result
+
+ ranking number for each row, with gaps and the same ranking for tied values
+ 
+Q)what is dense_rank()
+A) ranking number for each row, with no gaps and the same ranking for tied values
+
+Q)what is ROW_NUMBER() 
+A)– unique number for each row, with different numbers for tied values
+
+Q)what is rank() over(order by columns asc/desc)
+A)orders the result set.
+Then provides rank
+
+we can provide asc/desc for each column 
+
+Q)explain 
+select
+name,
+genre,
+rank() over(order by size),
+released
+from game
+ order by released desc
+ 
+A) First outside order by will get executed. Then inside
+
+Q)How to get primary key and foreign key of all tables in a schema
+A)SELECT cols.table_name, cols.column_name, cols.position, cons.status, cons.owner
+FROM all_constraints cons, all_cons_columns cols
+WHERE cols.table_name = 'TABLE_NAME'
+AND cons.constraint_type = 'P'
+AND cons.constraint_name = cols.constraint_name
+AND cons.owner = cols.owner
+ORDER BY cols.table_name, cols.position;
+
+note:- 
+P - primary key
+R - foreign key
+C - check
+
+Q)How to retrieve password if forgot
+A)if forgot password :
+system search box (next to windows icon) --> 
+sql plus --> 
+sql>ALTER USER SYSTEM ACCOUNT UNLOCK; --> u can see the message "user aletered" --> 
+Note:- SYSTEM is the username currently. You can use whatever the account you want to
+sql> passw SYSTEM --> enter your desired new_password.
+
+Q)what is dual table
+A)dual table will come automatically with the oracle database installation. 
+It is used to select pesudo columns like sysdate, user. etc
+It can be used to perform arithmetic operations. eg: select (3+2) from dual;
+It can also be used to generate sequence of numbers eg: select rownum r from dual connect by rownum<=10;
+
+Q)How many columns and rows are present in dual
+A)1 row and 1 column (default)
+But we can get as many columns and rows as we want
+
+eg:-
+--select * from dual;
+It will show DUMMY column. And it has value X
+
+--select 45*2 from dual;
+Then it show column name as 45*2. And it has value 90
+
+--more rows
+select rownum r from dual connect by rownum <= 10;
+
+--more columns
+select 45*2 as h, 2*6 as B from dual;
+
+
+Q)Can we insert more rows into dual table
+A)Yes. But we should have privilege
+eg:
+insert into dual values('Y');
+
+Then two rows will present as 'X' is default.
+
+Q)Can we create a table from existing table or how to create a backing table
+A)Create table newTable as select * from oldTable;
+But usually we will download a file
+
+Q)Can we drop all columns of a table
+A)No. Because there is of no use with the table created.
+
+Q)What are pseudo columns
+A)A pseudo column behaves like a table column, but not actually stored in the table
+We can select pseudo columns but cannot perform any DML operations
+eg:
+rowid - to get physical address of the table from the database.
+rownum
+level 
+curval
+nextval
+sysdate
+user
+objectId
+objectVal
+xmldata..etc
+
+Q)Difference between count(1) and count(*)
+A)Absolutely No difference related to work, performance, memory
+
+Q)Difference between count(*) and count(sal i.e., particular column)
+A)if we use * or some integer, then oracle gives the count of all rows in the table
+But if we mention a particular column, then it will consider only non-null values.
+Also we cannot use multiple columns for the count function. It accepts only one argument
+
+eg:
+create table emptest(id number, name varchar2(20));
+insert into emptest(id, name) values(null,  null);
+select count(*) from emptest; Ans : 1
+select count(name) from emptest; Ans : 0
+
+Q)Difference between IN and = operator
+A)= operator accepts only one value whereas IN operator can take more than one
+
+Q)What is the maximum no.of values can an IN operator take
+A)999
+
+Q)Difference between Exists and IN operators
+A)
+we can use either IN or exists
+eg: 
+using IN :- select * from emp where deptno in (select deptno from dept);
+using EXISTS :- select e.deptno, e.sal from emp e where exists(select deptno from dept d where e.deptno = d.deptno);
+
+Exists is used in case of Correlated sub query whereas IN is used in case of inner sub query
+
+IN doesn't need inner query but EXISTS must required inner query
+
+IN :- inner query is executed first, then the result is passed to the outer query. So, inner query is executed only once. We can also use IN operator with or without subquery
+eg:- 
+With subQuery : select * from emp where deptno in (select deptno from dept);
+Without subQuery : select * from emp where deptno in (10,20,30);
+ 
+Exists :- First Outer query gets executed. Then the first row of outer query is selected and pass to the inner query. This process continues for all rows of outer query.
+
+Both IN and Exists gives same performance. 
+until oracle 9i version, IN for small inner query, EXISTS for big inner query
+
+We should choose based on the filtering criteria of outer and inner queries. Basically it is better to run cost optimization plan
+
+Q)Difference between HAVING and WHERE clause
+A)Both are used to filter data where 
+Where is applicable before applying aggregate operations
+HAVING is applicable after applying aggregate operations
+
+Q)Difference between Delete and Truncate
+A)Delete is used to delete the rows selectively. Then we need to use commit/rollback explicitly. Delete triggers are fired if there are any triggers
+
+Truncate removes all the rows at a time. It is not possible to commit/rollback. Triggers won't get affected.
+Since Truncate doesn't need to maintain any undo operations because of auto-commit, it is faster. Also it is faster as triggers won't get affected.
+
+Q)Can we use Truncate using where clause
+A)No. Because it is used to delete all records
+
+Q)Can we delete a record from more than one table simultaneously
+A)Yes
+eg: Delete t1, t2 from 
+t1 inner join t2
+where t1.id = t2.id
+
+Q)How to delete duplicate records
+A)
+explanation : https://www.oracletutorial.com/advanced-oracle-sql/how-to-delete-duplicate-records-in-oracle/
+
+way 0:
+step 1:
+To delete the duplicate records, we need to find the list of records that shouldn't get deleted. This can be known by using
+select max(rowid), e.* from employee e group by columns; -- here columns tell which are equal
+
+step 2:
+Now delete all the records from the table and put condition not in above rows i.e., 
+delete from employee e where rowid not in (select max(rowid), e.* from employee e group by columns)
+
+way 1-1: using self join -- preserving min row
+delete from dept d1 where d1.rowid > 
+(
+select min(d2.rowid) from dept d2 
+where d1.deptId = d2.deptId;
+};
+
+way 1-2: using self join - preserving max row
+delete from dept d1 where d1.rowid < 
+(
+select max(d2.rowid) from dept d2 
+where d1.deptId = d2.deptId;
+};
+
+way 2: using aggregate function
+DELETE FROM
+  fruits
+WHERE
+  fruit_id NOT IN
+  (
+    SELECT
+      MAX(fruit_id)
+    FROM
+      fruits
+    GROUP BY
+      fruit_name,
+      color
+  );
+
+Q)explain various joins
+A)inner, left outer, right outer,  full outer, cross
+inner join and equi join are same
+
+equi join (not recommended) 
+select * from emp e, dept d where e.deptno = d.deptno
+
+inner join (recommended)
+select * from emp inner join dept
+on emp.deptno = dept.deptno
+
+-->left join and left outer join are same
+select * from emp LEFT JOIN dept
+on emp.deptno = dept.deptno 
+
+select * from emp LEFT OUTER JOIN dept
+on emp.deptno = dept.deptno
+
+-->similarly full join and full outer join are same
+right join and right outer join are same
+full outer join contain where clause. 
+consider a new department was introduced and it doesn't contain any of the employees, Then for that particular department record, employee details will be null.
+
+cross join :- it won't contain where clause. Total no.of records would be m*n where m is no.of records in left table and n is no.of records in right table.
+
+Q)What is self join. explain with example
+A)A join in which a table is joined to itself
+
+Getting Details from emp table i.e., empName and mgrName
+
+consider we have a table emp with columns empno, empName, mgrno
+
+select e1.ename as employeeName, e2.ename as managerName 
+from emp e1, emp e2
+where e1.mgrno = e2.empno
+
+Getting the list of employees who has same location as JOE
+
+select e1.employee_name from employee e1, employee e2
+where e1.employee_location = e2.employee_location and
+e2.employee_location = 'JOE';
+
+Q)What happens when a join condition is missed
+A)it becomes cartesian join
+eg: select * from sales s, customer c;
+
+Q)Which is faster among left outer join and right outer join
+A)No difference
+
+Q)Explain various datatypes in oracle
+A)
+Character data types
+CHAR
+VARCHAR (Reserved)
+VARCHAR2
+NCHAR
+NVARCHAR2
+
+
+Numeric data types
+LONG
+NUMBER
+BINARY_FLOAT
+BINARY_DOUBLE
+
+Date data types
+DATE
+TIMESTAMP
+TIMESTAMP WITH TIME ZONE
+TIMESTAMP WITH LOCAL TIME ZONE
+
+Large Objects
+CLOB
+NCLOB
+BFILE
+
+XML data types
+XMLType
+
+Q)Difference between char, varchar and varchar2
+A)VARCHAR is reserved by oracle and it is recommended not to use it.
+CHAR is fixed length, so even if we don't use the entire length, that memory is allocated i.e., oracle will pad the entry with spaces.
+VARCHAR2 is variable length, so if we don't use all the memory in the entry, then it won't be padded
+
+Q)Can u create a table column with boolean data types
+A)NO
+
+Q)Difference between date and timestamp
+A)Date can store century, year, month, day, hour, minutes, seconds
+But Timestamp can do more than that i.e., milliseconds
+Timestamp can also store timezone
+
+Q)Difference between CHAR and NCHAR
+A)NCHAR used to store characters in different languages. This need 2 bytes per each character
+CHAR used to store english characters. This need 1 byte per each character
+
+By default SQLServer uses NCHAR and DB2 uses CHAR. we faced performance issue when we migrated our database from DB2(IBM) to SQLServer(Microsoft)
+
+explanation:- while creating tables in DB2, we mentioned as CHAR.
+our application performance has decreased a lot after migration.
+because whatever the data my application is requesting, SQLServer is converting the CHAR to NCHAR and sending it. 
+Performance issue came because of conversion
+
+Q)What is composite datatype
+A)if the datatype is composed of multiple data types i.e., 
+RECORD
+
+Q)Difference between INSTR and SUBSTR
+A)SUBSTR is used to extract a substring from a string
+INSTR function is used to return the location of substring in a string
+
+Q)What are conversion functions
+A)To typecast data from one type to another
+eg:
+TO_CHAR
+TO_DATE
+TO_NUMBER
+
+In addition to these, lot (nearly 50) of conversion functions are available in oracle.
+
+Q)what is the usage of LPAD and RPAD functions
+A)adding padding character. 
+if the data is bigger than allowed length, then it will trim the excess characters
+Default padding character is space
+
+Q)Difference between single row and multi row functions
+A)Single row functions return a single result row for every row of a queried table or view
+eg: select empno, ename, to_char(sal, '9,999.99') from emp;
+Here the salary column is formatted according to the given format for every row of emp table
+
+Multi row functions return a single result row based on group of rows rather than on single row
+eg: select deptno, sum(sal) from emp group by deptno;
+
+Q)What are the various date functions have you used
+A)MONTHS_BETWEEN : to find the months between the person applied for jobless and current in ucms
+ADD_MONTHS : add months to a particular date. ucms will give money only for 6 months in an year.
+LAST_DAY : To get last day of a given month. ucms will process checks only on business days. 
+NEXT_DAY : To get next day of given date.
+EXTRACT : to extract a portion of date i.e to get year, month, day etc
+
+Q)How to add one month to sysdate
+A)select ADD_MONTHS(SYSDATE,1) from dual;
+
+Q)How to substract one month from sysdate
+A)select ADD_MONTHS(SYSDATE,-1) from dual;
+
+Q)What is the simplest way to add one hour to sysdate
+A)select ADD_MONTHS(SYSDATE,1/30*24) from dual;
+
+Q)What is the difference between CASE & DECODE statements
+A)Both CASE and DECODE provide if-then-else functionality
+DECODE is just like simple if-then-else statement which is used to perform simple logic
+eg:
+DECODE
+(if 'this', 
+'matches this', 'then this result',
+'matches this', 'then this result',
+....
+else alternative result
+)
+
+CASE
+WHEN A=B THEN C
+WHEN D!=F THEN E
+ELSE Q;
+
+Normally DECODE is used to perform simple if-else conditions, whereas CASE is used to perform complex operations.
+
+Q)What is the output of 
+A)--- select 1+null from dual --- null
+select 1*null from dual --- null
+select 1/null from dual --- null
+
+Because any arithmetic operation made with null gives null
+
+Q)Explain briefly NVL, NVL2, Null IF functions (or) null functions
+A)NVL : This function allows us to replace null values to default value.
+This function takes two parameters. if the first parameter is null, then it returns second parameter. 
+Otherwise first parameter will be returned.
+
+NVL2 : 
+It accepts three parameters.
+if the first parameter is not null, then it returns second parameter. Otherwise third parameter.
+
+NULLIF :
+It accepts two parameters and returns null if both the parameters are equal.
+Otherwise first parameter is returned.
+
+we can write examples using dual table.
+
+Q)Explain COALESCE function
+A) It accepts two or more parameters.
+Returns first non-null value
+if all parameters are null, then it returns null value
+
+Q)Can we modify a null column(i.e., it accepts null values) to not null column(i.e., it won't accepts null value) if table has some data
+A)Yes, if the column doesn't have null values
+No, if the column has null values
+
+Q)Consider a table column has null values. then what is the output of following queries
+select * from table where column = null;
+select * from table where column in (null);
+
+A)Zero records. Because we should use 'is null' but not = or in operators.
+
+Q)what is the output of below statement
+select 'tom' || null || 'joe' from dual;
+A)tomjoe. because concatenation is not arithmetic operator.
+
+Q)which datatype doesn't allow null values
+A) none
+
+Q)What is a constraint? How many types are there
+A)constraint is also called as integrity constraint.
+They will enforce some rules so that it will allow only proper data.
+
+Not Null : won't allow nulls
+
+Unique : prohibits multiple rows have same data in particular column or combination of column. Because we can create on		multiple columns
+
+Primary Key : not null + unique
+
+Foreign key : It takes values from one table in another table. 
+
+Check : the value should satify a condition.
+
+Ref(ask) : Allows us to further describe the realtionship between the REF column and the object it references.
+
+Q) Can a unique contraint allow nulls
+A)yes
+if we don't want to allow nulls, then we need to use "not null" constraint
+Also we can add any no.of rows with null values because database won't consider the null values while checking unique constraint
+
+Q)Can a table has two primary keys
+A)NO
+
+Q)Can we create a primary key constraint on one column and foreign key constraint on another column
+A)Yes
+
+Q)How to disable a constraint
+A)alter table table_name disable constraint constraint_name;
+
+Q)Can we use sysdate in check constraint
+A) No , because sysdate is a pseudo column. We cannot use pseudo columns on check constraint. 
+Reason: These are dynamic in nature. 
+eg: user is a pseudo column we can have multiple users to database.
+sysdate : it may be different in various locations.
+
+Q)How can we use pseudo column on a check contraint if there is a requirement. for eg: consider we have a database column date where the date should be greater than sysdate. UCMS scenario
+A)By usinng trigger we can achieve this.
+
+Create or replace trigger test_dob before insert or update on table_name 
+begin
+	if: dob>sysdate then
+	raise_application_error(...;dateOfBirth cannot be in the future);
+end;
+
+Q)if you create a primary key, what index will get created by default
+A)unique index will get created.
+
+Q)what are cascade constraints
+A)Consider we are trying to dropping a table, then the database may not allow as there are some constraints like foreign key. 
+so, we need to add this clause while dropping a table
+eg: drop table table_name cascade constraints;
+ask : write a sample table and try to drop it
+
+Q)what is on delete cascade
+A)A foreign key with clause delete cascade means if a record in the parent table is deleted, then the corresponding records in the child table get deleted automatically
+
+Q)which will fire first i.e., trigger or constraint
+A)First Before Triggers
+Then Constraints
+Then After Triggers
+
+Q)I have two tables and they have foreign keys referencing each other with different columns. Then how can i insert data into those tables
+
+A)we can do by disabling the foreign key references.
+But we should not design tables in that way i.e., in circular reference manner.
+
+Q)what is a sequence and what is its need
+A)A sequence is a database object that auto generates continuous unique numbers.
+It is used whenever we need to populate a column with unique values.
+eg: dd5Number, caseNumber ...etc
+
+Q)Explain the sequence with an example
+A)Create sequence sequence_name 
+MINSVALUE value
+MAXVALUE value
+STARTs WITH  value
+INCREMENT BY value
+
+Q)If we just write create sequence sequence_name;
+A)Yes
+Because all the remaining have default values i.e., 
+MINVALUE, STARTS WITH, INCREMENT BY - 1
+
+Q)Can you reset a sequence to start at a different number
+A) Yes
+eg:
+alter sequence sequence_name increment by -4;
+Then if we try to get NEXTVAL, then it decreases -4 to its until then maxValue and adds the increment value.
+
+Q)Can we create a synonym with the same name of Object
+A)NO, if you are creating in the same schema
+Yes, if you are creating in a different schema
+
+Q)Difference between database and schema
+A) ask
+
+Q)What is a synonym and what is its use
+A)synonym is an alternative name to a database object like table, view, sequence, stored procedure...etc
+current schema user can access all of its objects automatically
+But if we want to give access to an object from another schema, then we will create synonym. Then the other user doesn't know which schema has the actual object. He will just use it.
+
+Q)what are public synonyms
+A)public synonyms are accessible to all users.
+But each user must have appropriate privileges on the underlying object.
+eg: create public synonym customer for inventory.cust;
+Here inventory is a schema. 
+cust is a table in inventory schema
+Then all the users who has select privileges on inventory.cust table, they can use the synonym
+
+Q)what are set operators
+A)union : comes from both queries but no duplicates.
+union all : with duplicates
+minus : returns all rows from first query, then it removes the records that are also present in second query.
+intersect : common rows
+
+Q)Difference between join and set operations
+A)join is used to select columns from two or more tables based on logical relationship between the tables.
+
+set operators are used to combine similar types of data from two or more tables.
+
+Q)which is faster between union and unionAll
+A)UNION ALL. since UNION need to remove the duplicate rows
+
+Q)Should the no.of columns be same when performing SET operations
+A)Yes
+eg:
+select empno, salary, from emp
+union all
+select empno, salary, from emp_history
+
+Q)Should the datatypes of the columns be same same when performing SET operations
+A)Yes
+
+Q)what is nested subQuery
+A)any query which presents in the where clause
+
+eg; select * from sales where customerid in (select customerid from customer);
+
+Q)what is inline subquery
+A)A subquery which appears in the from clause.
+eg:
+select * from 
+sales s, (select customerid from customer) c 
+where s.customerid = c.customerid
+
+Q)what is scalar subquery
+A)A subquery which appears in the select clause
+It can return only 1 column and 1 row
+
+eg:
+select 
+s.customerid, s.total_amount , (select first_name from customer c where c.customerid = s.customerid) first_name 
+from sales s; 
+
+Note:- the query in the paranthesis returns only one column and one row.
+if scalar subquery returns more than one row, then it throws an exception.
+
+Q)what is the advantage of WITH clause
+A)Using WITH clause, we can execute subquery one time. Then we can refer it multiple times while executing the main query.
+
+The data is saved in the temporary table. Thus improved the performance.
+
+eg:
+WITH dept_count as (
+	select deptno, count(*) as dept_count
+	from emp
+	group by deptno
+	)
+select 
+e.ename as employee_name, dc1.dept_count as emp_dept_count, m.ename as manager_name, dc2.dept_count as mgr_dept_count
+from emp e, dept_count dc1, emp m, dept_count dc2
+where e.dept_no = dc1.dept_no and e.mgr = m.empno;
+
+Note:- Here the subquery is dept_count i.e. 
+WITH dept_count as (
+	select deptno, count(*) as dept_count
+	from emp
+	group by deptno
+	)
+
+Then we are using dept_count in the main query two times.
+	
+Q)Write correlated subquery and explain how it works
+A)It is also a type of subquery where outer query is executed first. Then for each row of outer query, inner query is executed.
+
+eg:
+select empno, fname, sal, deptid from emp e where sal = (select avg(sal) from emp where deptid = e.deptId)
+
+Q)what is view and its advantage
+A)View is virtual table based on the result of a SQL statement
+when you execute the view, data is pulled from the database table and shown to the user.
+
+Advantages:
+1) Consider we have a complex query involving lot of business and joins, Then instead of writing it again and again, we can use view.
+
+2)we can mask some sensitive data like ssn, accout number ...etc, so that the users may not know what is it.
+
+3)we can use view to limit access only to part of the table.
+
+Q)Can we create a synonym on view
+A)yes
+
+Q)what are key preserved tables
+A)A table is key preserved if every key of the table can also be a key of the result of the join.
+So, a key preserved table has its keys preserved through a join.
+
+The concept dictates the restrictions on modifying join views.
+
+eg:
+create view customer_sales as
+select c.customer_id, c.first_name, c.last_name, c.region, 
+		s.sales_date, s.order_id, s.product_id, s.total_amount
+from customer c, sales s
+where c.customer_id = s.customer_id;
+
+Here customer table has primary key on column customer_id and it is present in the view customer_sales
+so, customer table is our key preserved table in this view.
+
+Q)Can we delete a record in a view
+A)Yes
+--Rows from a join view can be deleted as long as there is exactly one key preserved table in the join
+--The key preserved table can be repeated in the from clause. i.e., a self join is ok.
+--if the view is defined with_the_check option clause and the key preserved table is repeated, then the rows cannot be deleted from the view.
+
+Q)Can we update a view-ask
+A)--All updatable columns of a join view must map to columns of the key preserved table.
+--If the view is defined with the WITH CHECK OPTION  clause, then all join columns and all columns of repeated tables are not updatable.
+
+Q)Can we insert data into a view-ask
+A)yes
+--An insert statement must not explicitly or implicitly refer to the columns of a non-key preserved table.
+--if the join is defined with the WITH CHECK OPTION clause, insert statements are not permitted.
+
+Q)If we create a view from two tables by taking all the columns. is it possible to update the view.
+A)No, because we can have only one key preserved table in the view to update. Here two will come.
+
+But we need to do? How 
+Use Triggers
+
+create or replace trigger v_mytrigger
+instead of update
+on view_name
+for each row
+
+Q)if table is dropped, then what happens to the view
+A)All the views which are referencing to the table become invalid, but they won't get dropped.
+
+Q)what is the force option on a view
+A)we will create a view with the sql statement.
+But if the sql statement is invalid, then view won't get created.
+With force option, we can create view even the sql statement is not valid.
+
+eg: create force view customerview as
+select * from table_waiting
+
+Q)what is a database
+A)A database is a collection of information that is organized so that it can be easily accessed, managed and updated.
+
+Q)what is difference between dbms and rdbms
+A)in dbms, data is stored in the form of files/tables.
+in rdbms, there may be relation between files/tables i.e., primary key and foreign key.
+
+Q)what is sql
+A)structured query language
+
+Q)what are the properties of transaction
+A)ACID 
+Atomicity : if the transaction gets completed, then the modifications will get reflected in the database. Otherwise rolled back.
+Consistency : database moves from one consistent state to another if transaction is succesful otherwise remain in the original consistent state if the transaction fails.
+Isolation : Every transaction should operate as it is the only transaction in the system.
+Durability : if a transaction completes properly, then the modified data should be available on permanent basis.
+
+Q)what are isolation levels
+A)
+Read Uncommited
+Read commited
+Repeatable Read : if any transaction is holding some x rows in a table, then other transactions can't even know about these x rows.
+Serializable : ask
+
+Q)what is database lock
+A)database lock can occur at two situations i.e., read or write
+database lock is used when multiple users are trying to access the database concurrently.
+this prevents data corruption.
+
+Q)what are the types of locks
+A)Shared And Exclusive locks
+Shared lock : when a shared lock is applied on a data item, then others can access the data but not write.
+Exclusive lock : when an exclusive lock is applied on a data item, then others neither access nor write.
+
+Q)what is SGA
+A)SGA means System Global Area
+SGA is the memory allocated which was present in RAM when an oracle instance starts up.
+SGA is used to store shared information across all database users.
+
+The common components are
+Library Cache : Used to store oracle statements.
+Data Dictionary Cache : contains definitions of database objects and privileges & grants to users.
+Database Buffer Cache : contains frequently accessed data so that increases the performance.
+Redo Log Buffer Cache : it records all changes made to the data files.
+
+Q)what is PGA
+A)Program/Process global area.
+PGA is a non-shared memory created by oracle database when a server process is started.
+Access to PGA is exclusive to the server process.
+There is one PGA for each server process.
+
+Each server process is like a sql statement executing by the oracle engine.
+
+Q)what is table space.
+A)table space contain data files.
+data file may be table/index..etc.
+a table may present in one or more data files.
+
+Q)what is data block
+A)It is the smallest unit of data by a database.
+
+Q)what is data dictionary
+A)It is a set of read only tables that provides information(metadata) about the database.
+A data dictionary contains
+- the definitions of all database schema objects i.e., tables/views/synonyms/triggers/indexes...etc
+- how much space is allocated to the objects. And how much space is currently used by them
+- default values for columns
+- integrity constraint information
+- names of oracle users
+- privileges and roles granted to the users
+- Auditing information like who has accessed, who has updated..etc
+
+We can know information of data dictionary with the views DBA, ALL OR USER.
+
+Q)what is an oracle instance
+A)when a database is started, all the required software is loaded into PGA. The software and PGA is used to manipulate the data in the database. This is called oracle instance.
+
+Q)what is save point
+A)A savepoint is a marker within a transaction that allows partial rollback.
+As changes made in the transaction, we can create various SAVEPOINTs to mark different points within the transaction.
+if we encounter an error, then we will get the capability to rollback the transaction upto the desired SAVEPOINT or to the beginning of the transaction
+
+Q)what are dead locks
+A)A dead lock occurs when two or more sessions are awaiting for data locked by each resulting in both the session being locked.
+Oracle automatically detects and resolves the deadlocks.
+
+Q)How a sql statement will get executed.
+A)
+syntax check : first oracle will check whether the statement has any compilation errors.
+semantic check : checks whether the entities were actually there or not with the help of data dictionary
+shared pool check (soft parse) : checks whether this statement got executed previously either by same user or any user. if there, then the control goes to execution stage.
+optimization (hard parse) : generates various plans to execute
+Generation of query plan : generates the good plan
+execution : executes the query
+
+Q)How execution of query
+A)from, where, group by, having, select, distinct, orderby
+
+Q)what are virtual columns
+A)virtual columns are not stored on disk. They are derived while executing the sql statement.
+eg: select sal as sal+100 from emp;
+Usually sal column is there, but we are adding 100 to each record.
+
+Q)Can we create an index on virtual columns
+A)Yes
+They are treated like function based indexes.
+ask
+
+Q)Can we update data present in virtual columns
+A)No, as the data is not stored in the disk.
+
+Q)Can we use functions in virtual columns
+A)Yes
+But functions must be deterministic at the time of table creation.
+ask
+
+Q)Can we create constraints on virtual columns.
+A)Yes
+eg:
+create table emp(
+id number,
+sal number(9,2),
+salary as sal+100 primary key
+);
+
+Q)what are indexes? 
+A)indexes are data structures used by database for faster retrieval of data.
+
+index types:
+unique
+non-unique 
+B-Tree(Binary Tree) (default)
+Bitmap
+Bitmap join
+Function based
+
+Q)why do we need to go for function based index.
+A)whenever we use a function regualarly to fetch data from database and would like to build an index on that column
+eg:
+select * from customer where UPPER(first_name) = 'JOHN'
+whenever we are using UPPER function, the performance is going down. Then it is better to create index on that function i.e., 
+Create index first_name_idx on customer(upper(first_name));
+
+Q)What is bitmap index? when should we go for it
+A)Bitmap index is different from the default i.e., B-Tree index because of the way it is stored.
+In Bitmap index, a two dimentional array is created with one column for every row in the table being indexed.
+No.of rows in the bitmap structure will be equal to the no.of distinct values in the column.
+
+we should go for bitmap index, when the column has low cardinality i.e., no.of distinct values are few
+eg: gender : male/female
+color :
+deptid
+
+Q)How to check whether oracle has used index or not
+A)If we run the execution plan, we can see "index range scan" operation in the generated plan. Then we can know whether index is used or not.
+
+Q)How to rebuild an index
+A)Alter index index_name REBUILD;
+
+Q)when should we rebuild and index.
+A)we will do lot of operations on a table.
+with several deletes, the B-Tree index might have some dead index nodes.
+with several inserts, the index height might have grown
+when we rebuild the index, the dead index nodes will be deleted and the index height will get adjusted. This will increase the performance.
+That's why we need to rebuild the index just like fragmentation for computer.
+
+Q)How to know which columns have indexes in a table
+A)We can query the system table ALL_INDEXES OR USER_INDEXES OR DBA_INDEXES to find out if a table is indexed or not.
+
+eg: select * from all_indexes where table_name = 'cutomer'
+
+Q)what is composite index
+A)which is built on two or more columns
+
+eg: create index index_name on table_name(col1, col2..);
+
+Q)what are the various reasons to suppress an index.
+A)The following are the scenarios where index will get supressed automatically. That's why it is better to see plan.
+- using functions on an index column
+- performing arithmetic operations on an index column
+- use of <> on an index column
+- use of concatenation || operator on an index column
+- comparing character indexed column with a numeric value
+- use of is null (or) is not null
+
+Q)How does index form internally
+A)it stores data in the form of binary tree i.e., if we keep on putting data, it will store the data either on left side or right side. 
+
+Q)what is local index and global index.
+A)when creating indexes on partitioned tables, we will have the option to create local index or global index.
+local index : if there is one-to-one relationship between the partitioned table and index i.e., if a table has 10 partitions, then there will be 10 index partitions
+
+gloabl index : if there is one-to-many relationship, where the index is mapped to multiple partitioned tables.
+if a table has 10 partitions, we can have one index partition 
+
+Q)what is partitioned table?
+A)instead of keeping all the records at one place, we will distribute those records in multiple partitions. 
+This is useful when we are performing data management operations like data loads, index creation, index rebuild.. etc.
+
+partitioning also improves query performance as querying the part of table instead of entire table.
+
+Q)what are the various types of partitions avaiable
+A)Range partitioning
+list partitioning
+has partitioning
+composite partitioning
+interval partitioning
+
+Q)what is the most commonly used partition
+A)Range Partition, because we save data in various partitions based on dates i.e., days, weeks, months, years..etc
+
+Q)what is materialized view
+A)Materialized view is a self refreshing view that stores data results like a table. It is also known as snapshot.
+
+Advantages:-
+1)Materialized views are used to replicate data across multiple servers.
+eg:- if we have customers in north america and europe. And if we need to replicate the europe data in north america and vice-versa, then lot of bandwidth will be used. if we use materialized views, replicating the data is very easy.
+
+2)Materialized views are used to build aggregate tables from detailed data to improve performance
+eg:- if you are querying 1 million rows and preparing 10k rows i.e., groupby customer. So, instead of querying the entire 1 million rows, it is better to query 10k rows. we can refresh the data once in a day.
+
+Q)explain refresh methods and refresh types for a materialized view
+A)Refresh methods:
+Fast : A fast refresh is attempted, if materialized view logs are not present against the source tables in advance, the creation fails.
+
+Complete : The table segment supporting the materialized view is truncated and repopulated completely using the associated query.
+
+Force : A fast refresh is attempted first. if it is not possible by some reason, a complete refresh is performed.
+
+Refresh Types : 
+On Commit : The refresh is triggered by a committed data change in one of the dependent tables.
+
+On Demand : The refresh is initiated by a manual request or a scheduled task.
+
+Q)Difference between view and materialized view
+A)1) Execution:-
+A view's sql is executed at runtime. The results are fetched from the view's base tables when the view is queried.
+
+A materialized view is a "pre-answered" query - the query is executed when the materialized view is refreshed. Its result is stored inthe database and the query only browses the result.
+
+2)Space : 
+A view occupies no space other than for its definition in the data dictionary. because it is runtime.
+
+A materialized view occupies space. It exists in the same way as a table. It sits on a disk and could be indexed or partitioned.
+
+3)output freshness
+view has real time data
+materialized view doesn't reflect real time data as it contains the last refreshed data.
+
+4)where to use
+view is used if we want to hide the implementation details of complex query.
+Materialized view is used if we want to restrict access to a set of rows/columns in the base tables. eg:- not showing todays records in base table.
+
+5)materialized view has two extra options i.e., how to refresh the data. And enable query rewrite
+
+Q)what is a materialized view log or snapshot log
+A)It is an oracle object that holds the primary keys and/or the rowids of rows that have been updated in master table. This is useful for fast refreshing
+
+Q)I want to create a materialized view on another database and refresh it periodically. is is possible
+A)yes using db-link
+
+Q)if base tables are deleted, then what happens to materialized view
+A)materialized view will not be deleted, the data still exists.
+when you refresh the MV, it fails.
+
+Q)what is query rewrite
+A)consider we have written a materialized view with query rewrite option, then if the user tries to query the same by writing a different query, Then oracle will look the materialized view and thinks that this query is already present in the materialized view. So, instead of executing that query, it will execute the materialized query.
+
+Q)what is a temporary table or global temporary table.
+A)A table that auto purges or deletes its data either upon a commit or at the end of the session.
+
+when we are performing a certain type of SQL operations where a lot of intermediate data is generated, Temporary tables are used to store the intermediate results. This will result in tremendous performance improvement.
+
+Q)Can two sessions share data via global temporary table
+A)No. Rows saved on these tables are only visible to the session that inserts them.
+
+Q)what is the purpose of "commit preserve rows" clause in global temporary table.
+A)The "on commit preserve rows" clause is used to tell the sql engine that when a transaction is committed the temporary table should not be cleared.
+
+Q)what are analytical functions. how do they differ from aggregate functions
+A)Aggregate functions:-
+Aggregate functions return only one row per group.
+eg: select sales_date, sum(total_amount) from sales group by sales_date;
+Here total_amount the total of all the items of particular customer.
+
+Analytical functions:
+These return group value multiple times with each record, allowing further analysis.
+The groups of rows on which an analytic function operates are defined by window partitioning and window frame clauses.
+
+Q)what are various datatypes present to store large data.
+A)A LOB is large object used to store video, audio, photo...etc. With LOB, we can store upto 4GB of data.
+There are two types of LOBS
+1. internal LOB :-
+CLOB : Character LOB
+NCLOB : National CLOB
+BLOB : Binary LOB
+
+2. External LOB :-
+BFILE : refers to binary file. It holds a reference to large binary data stored as physical files in the Operating system i.e.,  outside the database.
+
+Q)which LOBS participate in transaction
+A)only Internal LOBS
+
+Q)what are new features introduced in LOBS
+A)we can create temporary lobs
+we can create secure lobs
+we can delete duplicate data in lob.
+compression feature is introduced.
+encryption feature is introduced
+
+Q)what are different join methods
+A)join types is different from join methods
+Merge join
+Nested loop join
+hash join
+
+These are used internally by oracle to join tables.
+
+Q)how do you tune your sql query
+A)step 1 : explain plan for sql statement;
+step 2 : select * from table(DBMS_XPLAN.DISPLAY);
+
+eg:
+explain plan for select * from employee
+select * from table(DBMS_XPLAN.DISPLAY);
+
+if we are able to see "index range scan" in the output, then indexes are using. 
+if it shows "table access full", then index got supressed
+
+Then we need to see why index got suppressed.
+
+An index could be suppressed if
+- if we use functions or arithmetic operations on index columns
+- if we use <> or || opearators on index columns
+- if we compare the indexed column datatype with another datatype
+- if we use is null or is not null
+
+Q)Write a query to select Nth maximum salary from EMP table
+A)We can achieve this by using the correlated sub query. In the below example we are getting the 5th
+highest salary without using the Analytical function.
+select *
+from emp emp1
+where (5-1) =
+(
+select count(distinct(emp2.sal))
+from emp emp2
+where emp2.sal > emp1.sal
+)
+In the below example we are getting the 5th highest salary by using the Analytical function.
+select * from
+(
+select e.*,
+DENSE_RANK() over (order by sal DESC) RN
+from emp e
+)
+where RN=5
+
+Q)Write a query to select top N salaries from the EMP table
+A)We can achieve this by using the DENSE_RANK Analytical function. In the below example we are
+getting the TOP 5 salaries from the EMP table.
+select * from
+(
+select e.*,
+DENSE_RANK() over (order by sal DESC) RN
+from emp e
+)
+where RN <=5
+
+Q)Write a query to select top N salaries from each department of the EMP table
+A)We can achieve this by using the DENSE_RANK Analytical function. In the below example we are
+getting the TOP 3 salaries for each department of the EMP table.
+select * from
+(
+select e.*,
+DENSE_RANK() over (partition by deptno order by sal DESC) RN
+from emp e
+)
+where RN <=3
+
+Q)How to select unique records from a table
+A)SELECT
+    DISTINCT column_1,
+    column_2,
+        ...
+FROM
+    table_name;
+start here
+Q)Write a query to select/delete duplicate rows from the EMP table
+A)We can achieve this by using the pseudo column ROWID.
+select * from emp
+where rowid not in
+(
+select min(rowid)
+ from emp
+ group by empno
+);
+delete from emp
+where rowid not in
+(
+select min(rowid)
+ from emp
+ group by empno
+);
+
+Q)Write a query to select only those employee information who are earning the same salary?
+A)We can achieve this in at least 3 ways…
+1
+st way
+select e1.* from emp e1,emp e2
+where e1.sal=e2.sal
+ and e1.ename <> e2.ename
+2
+nd way
+select * from emp
+where sal in
+ (select sal from emp
+ group by sal
+ having count(sal)>=2
+ )
+3
+rd way
+SELECT *
+FROM
+(
+SELECT e.*, count(*) Over (Partition BY sal ORDER BY sal) cnt
+FROM emp e
+)
+WHERE cnt>=2;
+
+Q)Write a query to display even/odd number rows from a table.
+A)We can achieve this by using the ROWNUM pseudo column.
+select * from
+ (select empno, ename, sal, rownum rn
+ from emp
+ order by empno
+ )
+where mod (rn, 2) <> 0
+order by rn
+
+Q)Write a query to display the employee information, who have more than 2 employees under a manager
+A)We can achieve this by using the COUNT analytical function.
+select * from
+(
+SELECT e.*, count(mgr) over (partition by mgr) as cnt
+from emp e
+)
+where cnt >= 2
+
+Q)Write a query to find the maximum salary from the EMP table without using functions.
+A)We can achieve this by using the SELF joins.
+select * from emp
+where sal not in
+(
+select A.sal
+from emp A, emp B
+where A.sal < B.sal
+)
+
+Q)Write a query to find the number of rows in a table without using COUNT function.
+A)SELECT MAX(rn) FROM
+(
+SELECT ROW_NUMBER() OVER(ORDER BY empno DESC) as rn FROM emp
+)
+
+Q)Write a query to find the LAST inserted record in a table.
+A)If you want the last record inserted, you need to have a timestamp or sequence number assigned to each
+record as they are inserted and then you can use the below query…
+select * from t
+where TIMESTAMP_COLUMN = (select max(timestamp_column) from T)
+and rownum = 1; 
+
+Q)Write a query to select the last N records from a table
+A)select * from emp where rownum < 3
+
+
+Q)Write a query to find the employees who are working in the company for the past 5 years
+A)We can achieve this using the ADD_MONTHS function.
+select * from emp where hiredate < add_months(sysdate,-60);
+
+Q)Explain OR condition in select statement
+A)if there is an OR condition in the select statement, then Oracle divides that into two chunks.
+first chunk table records + OR + second check table records
+
+eg: The following two queries produce different results.
+SELECT * FROM EMP 
+WHERE COMM IS NULL 
+AND SAL > 1100
+AND SAL < 5000
+AND SAL != 3000
+OR COMM = 0;
+
+SELECT * FROM EMP 
+WHERE COMM IS NULL 
+AND SAL > 1100
+AND SAL < 5000
+OR COMM = 0
+AND SAL != 3000;
+
+--> it is better to put paranthesis while using Operators
+eg:
+SELECT * FROM EMP 
+WHERE (COMM IS NULL 
+AND SAL > 1100
+AND SAL < 5000
+AND SAL != 3000)
+OR COMM = 0;
+
+How to do if we have two OR conditions on same column.
+we can use paranthesis.
+
+Q)waq to return employess that are salesman and that make either 300 dollars as commision or > 1000 dollars as commision
+A)SELECT * FROM EMP WHERE JOB = 'SALESMAN'
+AND
+(COMM = 300 OR COMM>1000)
+
+Q)We can write a select query with order by and without where clause
+A)Yes
+eg: SELECT ENAME, SAL FROM EMP ORDER BY SAL;
+
+Q)How the sorting will happen if we have two columns in orderby clause.
+A)if we write two columns after order by clause, then first the table is sorted as per first one. Then For every first, it sorts the second one.
+eg: select deptno, sal from emp order by deptno, sal
+
+Q)what are single row functions and multi row functions/group functions
+A)Single Row Functions means these will operate on each row at a time. In this way it applies to all the records of table.
+eg: concat, upper, lower...etc
+
+Multi Row Functions : it takes multiple rows but return single row
+eg: min, max, sum, avg, count
+
+Q)what is dual table
+A)it contains only single row but may contains more columns.
+By default it has single column i.e., DUMMY and value DUMMY
+if we want to test single row functions, then we can use this table
+eg: select 'pizza' as FOOD, 'fanta' as DRINK
+Here it has two columns called FOOD AND DRINK
+FOOD has value pizza and DRINK has value fanta
+
+Q)Can we use group by without where clause
+A)syntax of sql select statement is
+select 
+from
+where
+group by
+having
+order by 
+
+Yes. 
+
+Q)waq to retrieve the deptno which has more than 3 employees
+A)select deptno from emp group by job having count(*) > 3
+
+Q)waq to display how many employees are there in each particular job
+A)select job, count(*) from emp group by job
+
+Q)Does select column list should present in group by clause
+A)Any expression that are not group functions in the select column list must also present in group by clause. but not vice-versa i.e., group by clause columns must not present in select columns.
+eg:
+select col1, col2, col3,count(*) from tables
+[where conditions]
+group by col1, col2, col3,...coln
+[order by conditions]
+explanation:- the columns present in select statement must also present in group by clause.
+count(*) groupFunction can present in Select statement and it doesn't need to be present in group by clause
+coln is present in group by clause but not present in select columns
+
+Q)what is single row subquery
+A)if we use '=' in a subquery, then it is called single-row-subquery i.e., it returns only one record
+select * from emp where deptno = (select deptno from dept where deptno = 30)
+Here if the subquery returns more than one record, then oracle raises an error saying
+'single row subquery returns more than one row'
+
+Q)explain about TooManyRows issue
+A)if the subquery has more than one column and we are using IN clause in the outerquery, then oracle raises an error saying "Too Many Rows"
+select * from emp where deptno in (select deptno,loc from dept where deptno = 30)
+
+Q)what will be printed if we execute the following query
+A)
+select 'hello' from emp;
+output: it will print 'hello' for n no.of times where n = no.of records in emp table
+
+Q)what is the output
+select job, ename, (select * from dual);
+A)
+Displays job, ename, X
+Because the subquery returns a single record. But it will raise 'single row subquery returns more than one row' error if the subquery returns more than one record
+
+Q)what happens if we don't mention the table name in the join
+A)if we using joins, then there is no problem even if the we don't mention the table name for a particular column. This works as long as the join has only one column but not present in multiple tables
+
+eg:here we must mention the table name in the where clause as oracle should know from which table.
+select * 
+from emp, dept 
+where emp.deptno = dept.deptno
+
+eg: here table name is not necessary in the where clause as it is present in dept table but not emp table.
+select * 
+from emp, dept 
+where loc = 'DALLAS';
+
+Q)Difference between inner join and equi join
+A)same
+
+Q)what is the recommended way of writing joins
+A)equi join (not recommended) 
+select * from emp e, dept d where e.deptno = d.deptno
+
+inner join (recommended)
+select * from emp inner join dept
+on emp.deptno = dept.deptno
+
+same for other joins
+
+Q)Shold we write LEFT JOIN or LEFT OUTER JOIN
+A)left join and left outer join are same
+select * from emp LEFT JOIN dept
+on emp.deptno = dept.deptno 
+
+select * from emp LEFT OUTER JOIN dept
+on emp.deptno = dept.deptno
+
+similarly full join and full outer join are same
+right join and right outer join are same
+
+Q)Explain about Exists
+A)EXISTS : tells whether the where condition returns true or not.
+select * from emp where exists(select * from emp where job = 'PROGRAMMER');
+Since PROGRAMMER is not a job in emp table, exists condition will fail. so, this query won't return anything
+if exists condition passes, then all the records will come
+
+This is not a better way of programming, because for every record of outer query, inner query will get executed.
+So, if we replace exists with IN, First inner query will get executed. Then outer query will get executed.
+
+Q)Explain about Correlated SubQuery
+A)
+EXISTS keyword better suits for Correlated sub queries
+
+select d.* from dept where exists(select * from emp where d.dept_no = emp.dept_no);
+The above query is used to print the list of dept records which are present in emp table.
+
+Here, we cannot access the columns of inner query table in the outer query table. because exists keyword just returns true or false.
+
+so, queries can access the aliases of encapsulated query but the encapsulated query cannot access the aliases of inner query. Because inner query aliases are local to that subquery
+
+Q)How to insert multiple records at a time
+A)if we want to insert multiple records at a time 
+
+INSERT ALL
+	INTO TABLE_NAME(COLUMN_NAME, ..ETC) VALUES('',...)
+	INTO TABLE_NAME(COLUMN_NAME, ..ETC) VALUES('',...)
+	INTO TABLE_NAME(COLUMN_NAME, ..ETC) VALUES('',...)
+	....
+SELECT * FROM DUAL;
+
+The beauty of this approach is, we can insert all or none. 
+If we use multiple insert statements, then some will be inserted and some won't
+
+Q)Can we give same constraint for two different tables in a schema
+A)constraint name is for schema. so, we cannot give same constraint name for more than one table in a schema.
+eg:- providing a constraint name for a primary key in two tables.
+
+Q)Difference between index and unique index
+A)
+index is used to get the data fastly. Oracle will store the particular data in the index table with alphabetic order. so, when we try to access the data which has index on it, then it won't go to the actual table but to the index table.
+unique index can be created on records(one or more columns) where data is unique
+Note:- we can create index/unique index on one or more columns of the table.
+
+Q)Difference between rowid and rownum
+A)rowid :- address of each record in the table.
+rownum :- number of each row in the table.
+
+Q)what system tables have you used.
+A)Oracle has provided some tables which are used to know about the schema
+all_tables :- displays all tables.
+select * from all_tables where owner = 'schema_name' :- Then we can see our schema related only.
+
+all_tab_columns :- displayes all tables with all columns
+select * from all_tab_columns where table_name = 'EMPLOYEES'
+
+all_objects :-
+select * from all_objects where object_type = 'INDEX'. Then it displays all the objects which are indexes
+
+--> we can find list of system-tables in the website
+https://www.techonthenet.com/oracle/sys_tables/index.php
+
+Q)Difference between full outer join and cross join
+A)Consider we have two tables called emp and dept table.
+emp has two columns emp_name and dept_id(foreign key column)
+dept has two columns dept_id and dept_name
+
+Also consider we have an employee who doesn't belong to any of the department.
+Also consider we have a department where there are no employees.
+
+cross join : 
+- we cannot have where clause.
+- for every row of left table will connect with all the rows of right table. so, total records would be the multiplication of both table rows.
+
+full outer join : 
+- we must write where clause.
+- first left table(emp) was taken. Then we will have rows with satisfying where clause. So, one employee doesn't belong to any of the departments. Then we will have null value in the department_id column
+- now right table (department) was taken. where clause satisfying rows were already taken. we have a department where no employees were there. That row will come with employee name as null.
+
+Q)what is the challenging query that you have written
+A)it might be challenging for me but it may be silly for you. its better not to answer
+
+Q)what is normalization? And its types
+A)if we add normalization to dbms, Then it becomes RDBMS with the help of primary key and foreign key. 
+Normalization : It usually divides a large table into smaller ones
+if we don't normalize the data, the following issues will occur
+
+Insertion anomaly: It occurs when we cannot insert data to the table without the presence of another attribute
+Update anomaly:  It is a data inconsistency that results from data redundancy and a partial update of data.
+Deletion Anomaly: It occurs when certain attributes are lost because of the deletion of other attributes.
+
+First Normal Form : a single cell cannot hold multiple values
+eg:- consider an employee is there. employee_name and phone are columns in it.
+consider the employee has two phone numbers. we should not put both the phone numbers in the same cell.
+
+Second Normal Form : it should pass previous normal forms i.e., First normal form.
+we should not be able to find the non-primary attributes with part of primary key.
+
+Third Normal Form : non-primary attributes of a table should not dependent on other non-primary attribute
+
+BCNF(Boy Codd Normal Form) : it talks about functional dependency. 
+functional dependency means, The left-hand side attributes determine the values of attributes on the right-hand side.
+eg: X->Y i.e., X can determine Y
+
+consider we have a table with column, studentId, subject, professor.
+
+One student can enrol for multiple subjects.
+There can be multiple professors teaching one subject
+And, For each subject, a professor is assigned to the student
+
+As you can see Student ID,  and Subject form the primary key, which means the Subject column is a prime attribute. But, there is one more dependency, Professor → Subject.
+
+And while Subject is a prime attribute, Professor is a non-prime attribute, which is not allowed by BCNF.
+
+Now in order to satisfy the BCNF, we will be dividing the table into two parts. One table will hold Student ID which already exists and newly created column Professor ID.
+
+And in the second table, we will have the columns Professor ID, Professor and Subject.
+
+source : https://www.edureka.co/blog/normalization-in-sql/
+
+Q)what is inner-self join, outer-self join and cross-self join.
+A)self join is not a different type of join.
+It can be classified under any type of join i.e., inner, outer(left, right, full) , cross
+
+consider we have a table called emp with columns empId, empName, mgrId
+
+#########################
+empId#empName#mgrId
+#########################
+1		Mike	3
+2		Rob		1
+3		Todd	null
+4		Ben		1
+5		Sam		1
+
+inner-self join :- if we need the details like empName and his mgrName
+
+select e.empName as Employee, m.empName as Manager 
+from emp e inner join emp m
+on e.mgrId = m.empId;
+
+Here we will get 4 records as we can't find the empId for null manager
+
+left outer-self join :- replace the query with left in place of inner
+
+Here we will get 5 records as left table records will come anyway
+
+ask: see by writing the query in all ways.
+
+Q)what is order by 1
+A) Here 1 represents the column in the select clause.
+
+Q)explain oracle commands 
+A)DDL - CREATE, ALTER, DROP, TRUNCATE
+DML - INSERT, UPDATE, DELETE
+DQL - SELECT
+DCL - GRANT, REVOKE
+TCL - COMMIT, ROLLBACK, SAVEPOINT
+
+Q)How to practice sql
+A)https://techtfq.squarespace.com/
